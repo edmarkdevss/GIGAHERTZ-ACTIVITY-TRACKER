@@ -1,5 +1,5 @@
 
-  # Cooking tutorial with timer
+# giga hertz activcity tracker
 
   This is a code bundle for Cooking tutorial with timer. The original project is available at https://www.figma.com/design/E71GFKhBTrmeDRmMp1ood7/Cooking-tutorial-with-timer.
 
