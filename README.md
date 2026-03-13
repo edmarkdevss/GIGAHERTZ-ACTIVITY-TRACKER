@@ -9,7 +9,7 @@
 (┛ಠ_ಠ)┛彡┻━┻
 **BOO!** 👻 Huli ka sa akto, bro! 
 Wag ka masyadong umasa sa code, baka ma-ghost ka bigla! 
-Keep it real for Piolo and Rozi! 💖
+Keep it real!! 💖
 
 ---
 
