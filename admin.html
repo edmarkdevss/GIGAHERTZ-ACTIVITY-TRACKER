@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+    <title>Gigahertz Nexus — Activity Tracker</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ============================================================
+           THEME VARIABLES
+        ============================================================ */
+        :root {
+            --p: #1a3af5; --pd: #1228d4; --pl: #eef1ff;
+            --bg: #f4f7fe; --wh: #ffffff; --card: #ffffff;
+            --tx: #1e293b; --tx2: #475569; --tx3: #94a3b8;
+            --bd: #e2e8f0; --danger: #ef4444; --ok: #22c55e; --warn: #f59e0b;
+            --bg-grad-1: hsla(220,30%,96%,1); --bg-grad-2: hsla(210,40%,92%,1); --bg-grad-3: hsla(230,50%,94%,1);
+            --glass-bg: rgba(255,255,255,0.75); --glass-border: rgba(255,255,255,0.85);
+        }
+        [data-theme="dark"] {
+            --p: #3b82f6; --pd: #2563eb; --pl: #1e3a8a;
+            --bg: #0b1120; --wh: #111827; --card: #1e293b;
+            --tx: #f8fafc; --tx2: #cbd5e1; --tx3: #64748b;
+            --bd: #334155; --danger: #f87171; --ok: #4ade80; --warn: #fbbf24;
+            --bg-grad-1: hsla(222,47%,7%,1); --bg-grad-2: hsla(222,47%,12%,1); --bg-grad-3: hsla(222,47%,10%,1);
+            --glass-bg: rgba(30,41,59,0.7); --glass-border: rgba(255,255,255,0.08);
+        }
+        [data-theme="red"] {
+            --p: #ef4444; --pd: #dc2626; --pl: #450a0a;
+            --bg: #1a0505; --wh: #2d0a0a; --card: #3f0f0f;
+            --tx: #fecaca; --tx2: #fca5a5; --tx3: #f87171;
+            --bd: #7f1d1d; --danger: #ef4444; --ok: #22c55e; --warn: #f59e0b;
+            --bg-grad-1: hsla(0,50%,8%,1); --bg-grad-2: hsla(0,60%,12%,1); --bg-grad-3: hsla(0,70%,10%,1);
+            --glass-bg: rgba(69,10,10,0.7); --glass-border: rgba(239,68,68,0.15);
+        }
+
+        /* ============================================================
+           GLOBAL RESET & BASE
+        ============================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 15% 50%, var(--bg-grad-1), transparent 50%),
+                        radial-gradient(circle at 85% 30%, var(--bg-grad-2), transparent 50%),
+                        radial-gradient(circle at 50% 80%, var(--bg-grad-3), transparent 50%);
+            background-color: var(--bg);
+            background-attachment: fixed;
+            color: var(--tx);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color .5s ease, color .5s ease;
+        }
+        input, select, button, textarea { font-family: inherit; outline: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(150,150,150,0.25); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(150,150,150,0.4); }
+
+        /* ============================================================
+           GLASS / UI COMPONENTS
+        ============================================================ */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px -8px rgba(0,0,0,0.25);
+            transition: all .3s ease;
+        }
+        .glass-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .skeuo {
+            background: var(--glass-bg);
+            border-radius: 14px;
+            box-shadow: inset 2px 2px 4px rgba(255,255,255,0.05), inset -2px -2px 6px rgba(0,0,0,0.2), 2px 2px 5px rgba(0,0,0,0.15);
+            border: 1px solid var(--glass-border);
+            transition: all .2s ease;
+        }
+        .skeuo:active { box-shadow: inset 3px 3px 6px rgba(0,0,0,0.3), inset -2px -2px 5px rgba(255,255,255,0.04); transform: translateY(1px); }
+        .skeuo-active {
+            background: var(--p) !important;
+            box-shadow: inset 3px 3px 7px rgba(0,0,0,0.4), inset -3px -3px 7px rgba(255,255,255,0.1) !important;
+            border: 1px solid var(--pd) !important;
+            color: #fff !important;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--p), var(--pd));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all .2s ease;
+        }
+        .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .btn-primary:active { transform: translateY(1px); }
+        .text-grad {
+            background: linear-gradient(135deg, #fff 30%, var(--tx3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        [data-theme="light"] .text-grad {
+            background: linear-gradient(135deg, var(--tx) 30%, var(--tx2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .input-field {
+            width: 100%;
+            background: rgba(0,0,0,0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 11px 15px;
+            color: var(--tx);
+            transition: all .2s ease;
+        }
+        .input-field:focus { background: rgba(0,0,0,0.15); border-color: var(--p); box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+        .modal-overlay {
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(10px);
+            position: fixed; inset: 0; z-index: 999;
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeUp .2s ease;
+        }
+
+        /* ============================================================
+           ANIMATIONS
+        ============================================================ */
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideRight { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
+            70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+            100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+        }
+        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+        .anim-fade { animation: fadeUp .45s cubic-bezier(.4,0,.2,1) forwards; }
+        .anim-slide { animation: slideRight .35s cubic-bezier(.4,0,.2,1) forwards; }
+        .spinner { width:20px; height:20px; border:3px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; }
+        .pulse-alert { animation: pulse-ring 2s infinite; }
+        .tab-nums { font-variant-numeric: tabular-nums; letter-spacing: 2px; }
+
+        /* ============================================================
+           LIVE CLOCK
+        ============================================================ */
+        .live-clock {
+            position: fixed; bottom: 24px; left: 24px; z-index: 50;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 10px 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            cursor: default;
+            transition: transform .2s ease;
+        }
+        .live-clock:hover { transform: scale(1.04); }
+
+        /* ============================================================
+           TOAST
+        ============================================================ */
+        .toast {
+            position: fixed; top: 88px; right: 24px; z-index: 1000;
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 20px;
+            border-radius: 14px;
+            border-left: 4px solid var(--p);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            border-right: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            animation: slideRight .35s ease;
+            max-width: 380px;
+        }
+
+        /* ============================================================
+           STATUS BADGES
+        ============================================================ */
+        .badge-active { background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.3); }
+        .badge-idle { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.3); }
+        .badge-absent { background:rgba(239,68,68,0.15); color:#f87171; border:1px solid rgba(239,68,68,0.3); }
+
+        /* ============================================================
+           PROGRESS BARS
+        ============================================================ */
+        .progress-bar { height:6px; background:rgba(0,0,0,0.15); border-radius:99px; overflow:hidden; border:1px solid rgba(255,255,255,0.05); }
+        .progress-fill { height:100%; background:linear-gradient(90deg, var(--p), #818cf8); border-radius:99px; transition:width 1s ease; }
+
+        /* ============================================================
+           TABLE
+        ============================================================ */
+        .nexus-table th { padding: 14px 28px; text-align:left; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.1em; color:var(--tx3); }
+        .nexus-table td { padding: 16px 28px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .nexus-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+        /* ============================================================
+           SEARCH INPUT
+        ============================================================ */
+        .search-box {
+            background: rgba(0,0,0,0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 9px 14px 9px 36px;
+            color: var(--tx);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all .2s;
+            width: 100%;
+        }
+        .search-box:focus { border-color: var(--p); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); background: rgba(0,0,0,0.15); }
+        .search-box::placeholder { color: var(--tx3); font-weight: 500; }
+
+        /* ============================================================
+           ACTIVITY LOG FORM
+        ============================================================ */
+        .log-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 2fr auto;
+            gap: 10px;
+            align-items: end;
+            padding: 14px 20px;
+            border-radius: 14px;
+            background: rgba(0,0,0,0.1);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Employee tracker timer */
+        .timer-glow { text-shadow: 0 0 20px rgba(59,130,246,0.6); }
+
+        /* Stat card */
+        .stat-card { transition: transform .2s ease, box-shadow .2s ease; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 16px 48px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useMemo, useEffect, useRef, useCallback } = React;
+
+// ============================================================================
+// CONFIG
+// ============================================================================
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxrJb3czrgVOUUO4va7-9arnCAg9s9NvtlDaFsfGZ3LbSEqdT_-6bet-W4IcPZ6tfiT/exec";
+
+const DEPARTMENTS = [
+    { id: 1, name: 'ACCOUNTING', icon: '📊' },
+    { id: 2, name: 'INTERNAL AUDIT', icon: '📋' },
+    { id: 3, name: 'HR', icon: '👥' },
+    { id: 4, name: 'FACILITIES', icon: '🏢' },
+    { id: 5, name: 'PROCESS IMP.', icon: '📈' },
+    { id: 6, name: 'MARKETING', icon: '🎯' },
+    { id: 7, name: 'ONLINE SALES', icon: '💻' },
+    { id: 8, name: 'PRODUCT', icon: '📦' },
+    { id: 9, name: 'RMA', icon: '🔄' },
+    { id: 10, name: 'SALES & SUPPORT', icon: '🤝' },
+    { id: 11, name: 'WAREHOUSE', icon: '🏭' },
+    { id: 12, name: 'IT / NEXUS CORE', icon: '🖥️' }
+];
+
+const rawRoster = [
+    // Accounting (1)
+    {n:"Rich Jhen Calderon",d:1},{n:"Kyla Joena Cabantog",d:1},{n:"Bernadette Barcelon",d:1},{n:"Jome Valenzuela",d:1},{n:"Kaye Magallosa",d:1},{n:"Rozenne Bonayon",d:1},{n:"Luis Lorilla",d:1},{n:"Jonathan Dela Cruz",d:1},{n:"Harvey Go",d:1},{n:"Alwin John Ferrer",d:1},
+    // Internal Audit (2)
+    {n:"Leomar Lazadas",d:2},{n:"Anthony Ramos",d:2},{n:"Philip Joshua Enriquez",d:2},{n:"Jester John Nadera",d:2},{n:"Paula Jane Labonite",d:2},{n:"Jeffrey Tugay",d:2},{n:"Leah May Gerodias",d:2},{n:"Hanah Balquin",d:2},{n:"Rachel Angela Cornel",d:2},{n:"Jimuel Furo",d:2},{n:"Kevin Soriano",d:2},{n:"Renalyn Remundo",d:2},{n:"Jerico",d:2},{n:"Esmael Destojo",d:2},{n:"Von Romualdo",d:2},
+    // HR (3)
+    {n:"Alyssa Princess Laqui",d:3},{n:"Denise Joy Labii Aruta",d:3},{n:"Rogelio Antipuesto Liquedo Jr.",d:3},{n:"Norsaifa Pacalna Mamarinta",d:3},{n:"Jayvee Delfin Rosales",d:3},{n:"Diomedes Tioxon Salim",d:3},{n:"Karl Ceddric Earl Pontillas",d:3},{n:"Luciano Martin Ustaris",d:3},{n:"Romnick Melarpes",d:3},{n:"Rodger Ven Razon",d:3},{n:"Ma. Rrysalie Montebon Ricario",d:3},{n:"Ma Jimena Trias",d:3},{n:"Christian Angelo Angor",d:3},
+    // Facilities (4)
+    {n:"James Q. Hebrez",d:4},{n:"Myrna Sevilla",d:4},{n:"Vincent Dela Rosa",d:4},
+    // Process Imp (5)
+    {n:"James Michael Beltran",d:5},{n:"Kristian Jay Del Mundo",d:5},{n:"Marielle Joyce Ann Aguila",d:5},{n:"Rose Marie Labao",d:5},{n:"Marson Samosino",d:5},{n:"Edmark Lastimado",d:4},{n:"Danica Del Mundo",d:5},{n:"Piolo Janda",d:5},
+    // Marketing (6)
+    {n:"Wigbert Sasis",d:6},{n:"Shiela May Aquino",d:6},{n:"Rinalyn Buan",d:6},{n:"Paola Sharika Ochoa",d:6},{n:"Mark James Bihay",d:6},{n:"Guillermo Guevarra",d:6},{n:"Jeth Del Rosario",d:6},{n:"Joselito Castro",d:6},{n:"Justine",d:6},{n:"Lalaine Martos",d:6},{n:"Ryan Christian Cabelet",d:6},
+    // Online Sales (7)
+    {n:"Nerma Tolentino",d:7},{n:"Rod Jason Singson",d:7},
+    // Product (8)
+    {n:"Alma Jenicca Gala",d:8},{n:"Analyn Palada",d:8},{n:"Jean Princess Flores",d:8},{n:"Melvin Fajardo",d:8},{n:"David Mui",d:8},{n:"Kennet Christian Puno",d:8},{n:"Angelica Gavino",d:8},{n:"Andrey Manlagnit",d:8},{n:"Judy Ann Salazar",d:8},{n:"Robert Andres",d:8},{n:"Roland Dave Guillermo",d:8},
+    // RMA (9)
+    {n:"Yhaweh Digos",d:9},{n:"Kareen Jose",d:9},{n:"Rommel Manansala",d:9},{n:"Kyla Nicole Barrameda",d:9},{n:"Denica Marie Diche",d:9},{n:"Dyanne Aniban",d:9},{n:"Cyrill Colusi",d:9},{n:"Claudine Nicole Cosa",d:9},{n:"John Jun Ortega",d:9},{n:"Michael Gemarangan",d:9},{n:"Raniel Bermejo",d:9},{n:"Michael Keanne Saraza",d:9},{n:"Angelo Jose Lachenal",d:9},{n:"Wylkines Sadie",d:9},{n:"IJ Gopez Lugtu",d:9},{n:"Enrico Sagarbarria",d:9},
+    // Sales & Support (10)
+    {n:"Kimberly Galang",d:10},{n:"Kerreen Laudit",d:10},{n:"Christopher Jon Pascual",d:10},{n:"Rose Mary Jane Icban",d:10},{n:"Mark Raven Mallari",d:10},{n:"Joshua Colle",d:10},{n:"Jemaica De Leon",d:10},{n:"Ace Harold B. Clacio",d:10},{n:"Jerome Brieva",d:10},
+    // Warehouse (11)
+    {n:"Nilo Garcia",d:11},{n:"Jhon Viernes",d:11},
+    // IT/Nexus Core (12)
+    {n:"Piolo Daniele",d:12},{n:"Super Admin",d:12}
+];
+
+// Build employee list
+let _id = 1001;
+const EMPLOYEES_INIT = rawRoster.map((r, idx) => {
+    const parts = r.n.split(' ');
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ');
+    const email = `${firstName.toLowerCase().replace(/[^a-z]/g,'')}@gigahertz.com`;
+    const empId = `GHZ-${++_id}`;
+    const role = r.d === 12 ? (firstName === 'Piolo' ? 'Nexus Dev' : 'Super Admin') : 'Staff';
+    return {
+        id: idx + 1,
+        employeeId: empId,
+        deptId: r.d,
+        firstName,
+        lastName,
+        fullName: r.n,
+        role,
+        email,
+        status: Math.random() > 0.18 ? 'Active' : (Math.random() > 0.5 ? 'Idle' : 'Absent'),
+        loginCount: Math.floor(Math.random() * 90) + 1,
+        totalHours: Math.floor(Math.random() * 180) + 20,
+        password: 'ghz2025'
+    };
+});
+
+// Seed mock activity logs
+const ACTS_INIT = [];
+let _actId = 5000;
+const taskDescriptions = [
+    'Processed and verified financial documents for month-end closing.',
+    'Conducted inventory audit and reconciled stock discrepancies.',
+    'Assisted with onboarding orientation for new team members.',
+    'Prepared departmental report and coordinated with team leads.',
+    'Customer support and escalation handling via CRM system.',
+    'Quality check on outgoing product units and packaging.',
+    'Maintenance and inspection of office facilities and equipment.',
+    'Online platform order fulfillment and logistics coordination.',
+    'Marketing campaign review and content calendar alignment.',
+    'Performed system diagnostics and routine IT maintenance.',
+    'Data entry and spreadsheet updates for weekly KPI tracking.',
+    'Attended cross-department sync and took meeting minutes.',
+    'Processed RMA requests and coordinated with courier services.'
+];
+EMPLOYEES_INIT.slice(0, 60).forEach(emp => {
+    const count = Math.floor(Math.random() * 5) + 2;
+    for (let i = 0; i < count; i++) {
+        const daysAgo = Math.floor(Math.random() * 30);
+        const dateObj = new Date(Date.now() - daysAgo * 86400000);
+        const timeIn = '08:00 AM';
+        const rawOut = 17 + Math.floor(Math.random() * 3);
+        const timeOut = `0${rawOut}:00 PM`.replace('0','').trim();
+        const hrs = rawOut - 8;
+        ACTS_INIT.push({
+            id: _actId++,
+            empId: emp.id,
+            date: dateObj.toISOString(),
+            timeIn,
+            timeOut: `${rawOut > 12 ? rawOut - 12 : rawOut}:00 PM`,
+            totalHours: hrs,
+            description: taskDescriptions[Math.floor(Math.random() * taskDescriptions.length)],
+            status: 'Logged',
+            source: 'Manual Entry'
+        });
+    }
+});
+
+// ============================================================================
+// ADMIN ACCOUNTS — hardcoded fallback credentials (always work offline)
+// These are also validated first before hitting GAS for speed
+// ============================================================================
+const ADMIN_ACCOUNTS = [
+    {
+        id: 'ADM-001',
+        employeeId: 'GHZ-0001',
+        firstName: 'Nexus',
+        lastName: 'Admin',
+        email: 'admin@gigahertz.com',
+        password: 'admin123',
+        role: 'ADMIN',
+        deptId: 12,
+        status: 'Active',
+        fullName: 'Nexus Admin'
+    },
+    {
+        id: 'ADM-002',
+        employeeId: 'GHZ-0002',
+        firstName: 'James',
+        lastName: 'Beltran',
+        email: 'beltran.james@gmail.com',
+        password: 'jamespogi123',
+        role: 'ADMIN',
+        deptId: 5,  // Process Improvement
+        status: 'Active',
+        fullName: 'James Beltran'
+    }
+];
+
+// ============================================================================
+// API LAYER — GAS-first with full local fallback
+// Auth flow:
+//   1. Check hardcoded admin accounts (instant, always works)
+//   2. Check local employee roster
+//   3. Try GAS for server-side validation (if above fail)
+//   4. Full fallback if GAS unreachable
+// ============================================================================
+const api = {
+    _gasOk: null,
+    _lastPing: null,
+
+    async call(action, payload = {}) {
+        // Always try GAS first for non-login actions (fire-and-forget for writes)
+        if (action !== 'login') {
+            try {
+                const res = await Promise.race([
+                    fetch(GAS_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action, ...payload }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    }),
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+                ]);
+                if (res.ok) {
+                    const data = await res.json();
+                    api._gasOk = true;
+                    return data;
+                }
+            } catch (err) {
+                api._gasOk = false;
+                console.warn('[GAS] Write failed, logged locally:', err.message);
+            }
+            // For writes (logActivity, updateEmployee etc.) — local fallback is fine
+            return api._local(action, payload);
+        }
+
+        // LOGIN — check local accounts first (fastest path), then GAS
+        const localResult = api._localLogin(payload);
+        if (localResult.success) return localResult;
+
+        // Try GAS auth as secondary for employees not in local list
+        try {
+            const res = await Promise.race([
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'login', ...payload }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                }),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))
+            ]);
+            if (res.ok) {
+                const data = await res.json();
+                api._gasOk = true;
+                if (data.success) return data;
+            }
+        } catch (err) {
+            api._gasOk = false;
+            console.warn('[GAS] Auth check failed, using local only:', err.message);
+        }
+
+        // Final: if GAS also fails or returns not found, return local error
+        return { success: false, error: 'Invalid credentials. Check your email / name and password.' };
+    },
+
+    // Fast local login — checks admins + employee roster
+    _localLogin(payload) {
+        const id = (payload.identifier || '').trim().toLowerCase();
+        const pw = (payload.password || '').trim();
+
+        // 1. Check hardcoded admin accounts
+        const admin = ADMIN_ACCOUNTS.find(a =>
+            (a.email.toLowerCase() === id || a.fullName.toLowerCase() === id) &&
+            a.password === pw
+        );
+        if (admin) return { success: true, user: { ...admin } };
+
+        // 2. Check employee roster
+        const emp = EMPLOYEES_INIT.find(e =>
+            (e.email.toLowerCase() === id ||
+             e.fullName.toLowerCase() === id ||
+             e.firstName.toLowerCase() === id ||
+             e.employeeId.toLowerCase() === id) &&
+            e.password === pw
+        );
+        if (emp) return { success: true, user: { ...emp } };
+
+        return { success: false };
+    },
+
+    _local(action, payload) {
+        return new Promise(resolve => setTimeout(() => {
+            if (action === 'logActivity') resolve({ success: true, activityId: 'LOCAL-' + Date.now() });
+            else if (action === 'updateEmployee') resolve({ success: true });
+            else if (action === 'deleteEmployee') resolve({ success: true });
+            else if (action === 'ping') resolve({ success: true, status: 'local' });
+            else resolve({ success: true, data: [] });
+        }, 200));
+    },
+
+    async ping() {
+        try {
+            const res = await Promise.race([
+                fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'ping' }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                }),
+                new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000))
+            ]);
+            api._gasOk = res.ok;
+        } catch {
+            api._gasOk = false;
+        }
+        return api._gasOk;
+    }
+};
+
+// ============================================================================
+// UTILITY HELPERS
+// ============================================================================
+const fmtDate = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'2-digit', weekday:'short' });
+};
+const fmtTime = (iso) => new Date(iso).toLocaleTimeString('en-PH', { hour:'2-digit', minute:'2-digit' });
+const avatarColors = ['from-blue-500 to-indigo-600','from-purple-500 to-pink-600','from-emerald-500 to-teal-600','from-orange-500 to-red-600','from-cyan-500 to-blue-600'];
+const getAvatarColor = (id) => avatarColors[id % avatarColors.length];
+
+function exportToCSV(activities, emp) {
+    const rows = [['Date','Day','Time In','Time Out','Total Hours','Description','Status']];
+    activities.forEach(a => {
+        const d = new Date(a.date);
+        rows.push([
+            d.toLocaleDateString('en-PH'),
+            d.toLocaleDateString('en-US',{weekday:'long'}),
+            a.timeIn, a.timeOut, a.totalHours, `"${a.description}"`, a.status
+        ]);
+    });
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${emp.firstName}_${emp.lastName}_Activity_Log.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ============================================================================
+// SHARED COMPONENTS
+// ============================================================================
+const LiveClock = () => {
+    const [t, setT] = useState(new Date());
+    useEffect(() => { const i = setInterval(() => setT(new Date()), 1000); return () => clearInterval(i); }, []);
+    return (
+        <div className="live-clock flex flex-col items-center">
+            <span className="text-2xl font-black tab-nums text-grad drop-shadow-sm">
+                {t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+            </span>
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 mt-0.5">
+                {t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric',year:'numeric'})}
+            </span>
+        </div>
+    );
+};
+
+const Toast = ({ message, type, onClose }) => {
+    useEffect(() => { const t = setTimeout(onClose, 4500); return () => clearTimeout(t); }, [onClose]);
+    const icons = { success: 'fa-circle-check text-green-400', error: 'fa-triangle-exclamation text-red-400', info: 'fa-circle-info text-blue-400', warn: 'fa-exclamation-circle text-yellow-400' };
+    const colors = { success: '#22c55e', error: '#ef4444', info: '#3b82f6', warn: '#f59e0b' };
+    return (
+        <div className="toast anim-slide" style={{ borderLeftColor: colors[type] || colors.info }}>
+            <i className={`fa-solid ${icons[type] || icons.info} text-xl`}></i>
+            <span className="font-bold text-sm flex-1">{message}</span>
+            <button onClick={onClose} className="opacity-40 hover:opacity-100 transition-opacity ml-2"><i className="fa-solid fa-xmark"></i></button>
+        </div>
+    );
+};
+
+const StatusBadge = ({ status }) => {
+    const map = {
+        Active: { cls: 'badge-active', icon: 'fa-circle', label: 'Active' },
+        Idle: { cls: 'badge-idle', icon: 'fa-moon', label: 'Idle' },
+        Absent: { cls: 'badge-absent', icon: 'fa-triangle-exclamation', label: 'Absent' },
+        Logged: { cls: 'badge-active', icon: 'fa-check', label: 'Logged' }
+    };
+    const s = map[status] || { cls: 'badge-idle', icon: 'fa-circle', label: status };
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${s.cls}`}>
+            <i className={`fa-solid ${s.icon} text-[8px]`}></i>{s.label}
+        </span>
+    );
+};
+
+const Avatar = ({ emp, size = 'md' }) => {
+    const sizes = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-14 h-14 text-xl', xl: 'w-16 h-16 text-2xl' };
+    return (
+        <div className={`${sizes[size]} rounded-full bg-gradient-to-br ${getAvatarColor(emp.id)} flex items-center justify-center text-white font-black shadow-inner border border-white/20 shrink-0`}>
+            {emp.firstName?.[0] || '?'}
+        </div>
+    );
+};
+
+const StatCard = ({ title, value, icon, trend, alert, color = 'blue' }) => {
+    const cols = { blue: 'text-blue-400', green: 'text-green-400', yellow: 'text-yellow-400', red: 'text-red-400' };
+    return (
+        <div className={`glass p-6 rounded-3xl flex flex-col justify-between stat-card ${alert ? 'pulse-alert' : ''}`}>
+            <div className="flex justify-between items-start mb-4">
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl bg-white/10 border border-white/15 shadow-inner ${cols[color]}`}>
+                    {icon}
+                </div>
+                {trend !== undefined && (
+                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full border ${trend >= 0 ? 'bg-green-500/15 text-green-400 border-green-500/25' : 'bg-red-500/15 text-red-400 border-red-500/25'}`}>
+                        {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
+                    </span>
+                )}
+            </div>
+            <div>
+                <h3 className="text-4xl font-black text-grad">{value}</h3>
+                <p className="text-[10px] font-bold uppercase tracking-widest mt-2 opacity-55">{title}</p>
+            </div>
+        </div>
+    );
+};
+
+// ============================================================================
+// AUTH PORTAL
+// ============================================================================
+const AuthPortal = ({ onLogin, theme, toggleTheme }) => {
+    const [email, setEmail] = useState('');
+    const [pw, setPw] = useState('');
+    const [err, setErr] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [showPw, setShowPw] = useState(false);
+    const [gasStatus, setGasStatus] = useState('checking');
+    const [showAccounts, setShowAccounts] = useState(false);
+
+    useEffect(() => {
+        // GAS probe with 5s timeout — non-blocking
+        const controller = new AbortController();
+        const timeout = setTimeout(() => { controller.abort(); setGasStatus('offline'); }, 5000);
+        fetch(GAS_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'ping' }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            signal: controller.signal
+        })
+        .then(r => { clearTimeout(timeout); const ok = r.ok; api._gasOk = ok; setGasStatus(ok ? 'online' : 'offline'); })
+        .catch(() => { clearTimeout(timeout); api._gasOk = false; setGasStatus('offline'); });
+    }, []);
+
+    const themes = ['light','dark','red'];
+
+    const submit = async (e) => {
+        e?.preventDefault();
+        if (!email.trim() || !pw.trim()) return setErr('Please enter your email and password.');
+        setLoading(true); setErr('');
+        const res = await api.call('login', { identifier: email.trim(), password: pw.trim() });
+        setLoading(false);
+        if (res.success) onLogin(res.user);
+        else setErr(res.error || 'Authentication failed. Check your credentials.');
+    };
+
+    // Quick-fill credentials
+    const QUICK = [
+        { label: '🛡️ Admin (Nexus)', email: 'admin@gigahertz.com', pw: 'admin123', color: 'bg-blue-600/15 text-blue-400 border-blue-500/20 hover:bg-blue-600/25' },
+        { label: '🛡️ Admin (Beltran)', email: 'beltran.james@gmail.com', pw: 'jamespogi123', color: 'bg-indigo-600/15 text-indigo-400 border-indigo-500/20 hover:bg-indigo-600/25' },
+        { label: '👤 Employee Demo', email: 'piolo@gigahertz.com', pw: 'ghz2025', color: 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10' },
+    ];
+
+    return (
+        <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-gray-950 via-slate-900 to-black">
+            {/* Ambient orbs */}
+            <div className="absolute top-1/4 left-1/4 w-[32rem] h-[32rem] bg-blue-700 rounded-full mix-blend-screen filter blur-[120px] opacity-12 animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-[32rem] h-[32rem] bg-indigo-700 rounded-full mix-blend-screen filter blur-[120px] opacity-12 animate-pulse" style={{animationDelay:'2.5s'}}></div>
+            <div className="absolute top-2/3 left-1/2 w-[20rem] h-[20rem] bg-violet-700 rounded-full mix-blend-screen filter blur-[100px] opacity-10 animate-pulse" style={{animationDelay:'1.2s'}}></div>
+
+            {/* Theme cycle */}
+            <button onClick={() => toggleTheme(themes[(themes.indexOf(theme)+1)%themes.length])}
+                className="absolute top-5 right-5 px-4 py-2 rounded-xl glass text-[11px] font-bold uppercase tracking-widest text-white/70 hover:text-white hover:bg-white/10 transition z-50 flex items-center gap-2">
+                <i className="fa-solid fa-circle-half-stroke"></i> {theme}
+            </button>
+
+            {/* GAS indicator */}
+            <div className="absolute top-5 left-5 flex items-center gap-2 z-50">
+                <span className={`w-2 h-2 rounded-full shadow-sm ${gasStatus==='online'?'bg-green-400 shadow-green-500/50':gasStatus==='offline'?'bg-red-400 shadow-red-500/50':'bg-yellow-400 shadow-yellow-500/50 animate-pulse'}`}></span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                    GAS {gasStatus === 'checking' ? 'connecting...' : gasStatus}
+                </span>
+            </div>
+
+            {/* Main card */}
+            <div className="glass p-10 rounded-3xl w-full max-w-[440px] z-10 anim-fade border border-white/10 shadow-[0_30px_90px_rgba(0,0,0,0.7)] bg-black/55">
+
+                {/* Logo + title */}
+                <div className="flex justify-center mb-5">
+                    <div className="w-20 h-20 rounded-2xl shadow-2xl border-2 border-white/20 overflow-hidden bg-white p-1.5 hover:scale-105 transition">
+                        <img src="https://contents.smsupermalls.com/data/uploads/2020/07/GIGAHERTZ_COMPUTER_SYSTEM.jpg" alt="Logo" className="w-full h-full object-contain rounded-xl"/>
+                    </div>
+                </div>
+                <h2 className="text-3xl font-black text-center text-white mb-1 tracking-tight">Gigahertz Nexus</h2>
+                <p className="text-center text-[11px] font-bold uppercase tracking-widest mb-7 text-blue-300/80">
+                    Activity Tracker Portal &nbsp;•&nbsp; v3.0
+                </p>
+
+                {/* Error */}
+                {err && (
+                    <div className="bg-red-500/15 border border-red-500/35 text-red-300 font-semibold p-3 rounded-xl mb-5 text-sm flex items-center gap-3 anim-fade">
+                        <i className="fa-solid fa-triangle-exclamation shrink-0 text-red-400"></i> {err}
+                    </div>
+                )}
+
+                {/* Form */}
+                <form onSubmit={submit} className="space-y-4">
+                    <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5 text-gray-400">
+                            Email Address
+                        </label>
+                        <div className="relative">
+                            <i className="fa-solid fa-at absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                            <input
+                                type="text" required autoComplete="username"
+                                value={email} onChange={e => setEmail(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm font-semibold text-white placeholder-gray-600 focus:border-blue-500 focus:bg-white/8 transition outline-none shadow-inner"
+                                placeholder="user@gigahertz.com"
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5 text-gray-400">
+                            Security Key
+                        </label>
+                        <div className="relative">
+                            <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                            <input
+                                type={showPw ? 'text' : 'password'} required autoComplete="current-password"
+                                value={pw} onChange={e => setPw(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-12 py-3 text-sm font-semibold text-white placeholder-gray-600 focus:border-blue-500 focus:bg-white/8 transition outline-none shadow-inner"
+                                placeholder="••••••••"
+                            />
+                            <button type="button" onClick={() => setShowPw(p => !p)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition">
+                                <i className={`fa-solid ${showPw?'fa-eye-slash':'fa-eye'} text-sm`}></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" disabled={loading}
+                        className="w-full btn-primary py-3.5 rounded-xl font-black tracking-wide text-sm flex justify-center items-center gap-3 mt-1 disabled:opacity-60 disabled:cursor-not-allowed">
+                        {loading
+                            ? <><span className="spinner"></span> Authenticating...</>
+                            : <><i className="fa-solid fa-right-to-bracket"></i> Initialize Connection</>
+                        }
+                    </button>
+                </form>
+
+                {/* Quick access */}
+                <div className="mt-7 pt-6 border-t border-white/10">
+                    <button onClick={() => setShowAccounts(p => !p)}
+                        className="w-full text-center text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-gray-300 transition flex items-center justify-center gap-2 mb-3">
+                        <i className={`fa-solid fa-chevron-${showAccounts?'up':'down'} text-[9px]`}></i>
+                        Quick Login — Dev / Testing
+                        <i className={`fa-solid fa-chevron-${showAccounts?'up':'down'} text-[9px]`}></i>
+                    </button>
+                    {showAccounts && (
+                        <div className="space-y-2 anim-fade">
+                            {QUICK.map(q => (
+                                <button key={q.email}
+                                    onClick={() => { setEmail(q.email); setPw(q.pw); setErr(''); }}
+                                    className={`w-full py-2.5 px-4 rounded-xl text-[11px] font-bold border transition flex items-center justify-between ${q.color}`}>
+                                    <span>{q.label}</span>
+                                    <span className="font-mono opacity-60 text-[10px]">{q.email}</span>
+                                </button>
+                            ))}
+                            <p className="text-[9px] text-gray-600 text-center mt-2 uppercase tracking-widest">
+                                Employee default password: ghz2025
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                <p className="text-center text-[9px] font-bold text-gray-700 uppercase tracking-widest mt-5">
+                    Build v3.0 • {new Date().getFullYear()} Gigahertz Computer Systems
+                </p>
+            </div>
+        </div>
+    );
+};
+
+// ============================================================================
+// EMPLOYEE SIDE — NEXUS USER TRACKER
+// ============================================================================
+const EmployeeTracker = ({ user, onLogout, allActivities, setAllActivities }) => {
+    const [running, setRunning] = useState(false);
+    const [elapsed, setElapsed] = useState(0);
+    const [toast, setToast] = useState(null);
+    const [sessionStart, setSessionStart] = useState(null);
+    const [taskDesc, setTaskDesc] = useState('');
+    const [view, setView] = useState('dashboard');
+    const intervalRef = useRef(null);
+
+    const myActivities = useMemo(() => allActivities.filter(a => a.empId === user.id).sort((a,b) => new Date(b.date)-new Date(a.date)), [allActivities, user.id]);
+    const totalHours = useMemo(() => myActivities.reduce((s,a) => s + (a.totalHours||0), 0), [myActivities]);
+    const thisWeek = useMemo(() => {
+        const now = new Date(); const week = new Date(now - 7*86400000);
+        return myActivities.filter(a => new Date(a.date) >= week).reduce((s,a) => s+(a.totalHours||0),0);
+    }, [myActivities]);
+
+    const H = Math.floor(elapsed/3600);
+    const M = Math.floor((elapsed%3600)/60);
+    const S = elapsed%60;
+
+    const startSession = () => {
+        setRunning(true);
+        setSessionStart(new Date());
+        intervalRef.current = setInterval(() => setElapsed(p => p+1), 1000);
+        setToast({ message: 'Session started. Timer is running!', type: 'info' });
+    };
+
+    const stopSession = async () => {
+        clearInterval(intervalRef.current);
+        setRunning(false);
+        const end = new Date();
+        const hrs = parseFloat((elapsed/3600).toFixed(2));
+        const newAct = {
+            id: Date.now(),
+            empId: user.id,
+            date: sessionStart.toISOString(),
+            timeIn: sessionStart.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            timeOut: end.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            totalHours: hrs,
+            description: taskDesc || 'General work session tracked via Nexus Tracker.',
+            status: 'Logged',
+            source: 'Auto Timer'
+        };
+        setAllActivities(prev => [newAct, ...prev]);
+        setElapsed(0);
+        setTaskDesc('');
+        setToast({ message: `Session logged: ${H}h ${M}m ${S}s — syncing to Nexus...`, type: 'success' });
+        await api.call('logActivity', { empId: user.id, hours: hrs, description: newAct.description, timeIn: newAct.timeIn, timeOut: newAct.timeOut });
+    };
+
+    useEffect(() => () => clearInterval(intervalRef.current), []);
+
+    const dept = DEPARTMENTS.find(d => d.id === user.deptId);
+
+    return (
+        <div className="flex h-screen bg-gradient-to-br from-slate-950 to-black text-white overflow-hidden">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)}/>}
+
+            {/* Sidebar */}
+            <aside className="w-60 glass border-r border-white/10 flex flex-col z-10 shrink-0">
+                <div className="p-5 border-b border-white/10 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg text-sm"><i className="fa-solid fa-stopwatch"></i></div>
+                    <span className="font-black tracking-tight">NEXUS USER</span>
+                </div>
+                <nav className="p-3 flex-1 space-y-1">
+                    {[
+                        { id:'dashboard', icon:'fa-gauge-high', label:'Dashboard' },
+                        { id:'mylog', icon:'fa-list-check', label:'My Activity Log' },
+                    ].map(item => (
+                        <button key={item.id} onClick={() => setView(item.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${view === item.id ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
+                            <i className={`fa-soAlid ${item.icon} w-4`}></i> {item.label}
+                        </button>
+                    ))}
+                </nav>
+                <div className="p-4 border-t border-white/10 bg-black/20">
+                    <div className="flex items-center gap-3 mb-3">
+                        <Avatar emp={user} size="md"/>
+                        <div className="overflow-hidden">
+                            <div className="font-bold text-sm truncate">{user.firstName} {user.lastName}</div>
+                            <div className="text-[10px] text-gray-400 uppercase tracking-widest">{dept?.icon} {dept?.name || user.role}</div>
+                        </div>
+                    </div>
+                    <button onClick={onLogout} className="w-full py-2 rounded-xl border border-red-500/30 text-red-400 font-bold hover:bg-red-500/20 transition flex items-center justify-center gap-2 text-xs">
+                        <i className="fa-solid fa-power-off"></i> Disconnect
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main */}
+            <main className="flex-1 overflow-y-auto p-7">
+                {view === 'dashboard' && (
+                    <div className="anim-fade space-y-6">
+                        <div className="flex justify-between items-end">
+                            <div>
+                                <h1 className="text-3xl font-black text-grad">Welcome, {user.firstName}! 👋</h1>
+                                <p className="text-sm text-gray-400 font-semibold mt-1">{dept?.name || 'Gigahertz'} • {user.employeeId}</p>
+                            </div>
+                            <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-sm font-bold">
+                                <span className={`w-2 h-2 rounded-full ${running ? 'bg-red-400 animate-pulse' : 'bg-green-400'}`}></span>
+                                {running ? 'Session Active' : 'Ready'}
+                            </div>
+                        </div>
+
+                        {/* Stats Row */}
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="glass p-5 rounded-2xl">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Total Hours</p>
+                                <h3 className="text-3xl font-black text-grad">{totalHours.toFixed(1)}</h3>
+                            </div>
+                            <div className="glass p-5 rounded-2xl">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">This Week</p>
+                                <h3 className="text-3xl font-black text-grad">{thisWeek.toFixed(1)} hrs</h3>
+                            </div>
+                            <div className="glass p-5 rounded-2xl">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Sessions</p>
+                                <h3 className="text-3xl font-black text-grad">{myActivities.length}</h3>
+                            </div>
+                        </div>
+
+                        {/* Timer Card */}
+                        <div className="glass p-8 rounded-3xl relative overflow-hidden">
+                            <div className={`absolute inset-0 bg-gradient-to-br from-blue-600/10 to-indigo-600/10 transition-opacity duration-700 ${running ? 'opacity-100' : 'opacity-0'}`}></div>
+                            <div className="relative z-10">
+                                <div className="flex flex-col md:flex-row items-center gap-8">
+                                    <div className="flex-1">
+                                        <p className="text-[11px] font-bold text-blue-300 uppercase tracking-widest mb-2">
+                                            <i className={`fa-solid fa-satellite-dish mr-2 ${running ? 'animate-pulse' : ''}`}></i>
+                                            {running ? 'LIVE TRACKING SESSION' : 'START A NEW SESSION'}
+                                        </p>
+                                        <h2 className="text-2xl font-black mb-3">{running ? 'Session Running...' : 'Ready to Track'}</h2>
+                                        <div className="relative">
+                                            <i className="fa-solid fa-pencil absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+                                            <input
+                                                type="text"
+                                                value={taskDesc}
+                                                onChange={e => setTaskDesc(e.target.value)}
+                                                disabled={running}
+                                                placeholder="What are you working on? (optional)"
+                                                className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm font-medium text-white placeholder-gray-500 outline-none focus:border-blue-500 transition disabled:opacity-50"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center gap-5">
+                                        <div className={`tab-nums text-7xl font-black text-white ${running ? 'timer-glow' : ''}`}>
+                                            {String(H).padStart(2,'0')}:{String(M).padStart(2,'0')}:{String(S).padStart(2,'0')}
+                                        </div>
+                                        <button onClick={running ? stopSession : startSession}
+                                            className={`w-48 py-4 rounded-2xl font-black text-lg shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-3 ${running ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                                            {running ? <><i className="fa-solid fa-stop"></i> Stop & Log</> : <><i className="fa-solid fa-play"></i> Start Session</>}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Activities */}
+                        {myActivities.length > 0 && (
+                            <div className="glass p-6 rounded-3xl">
+                                <h3 className="font-black text-lg mb-4 text-grad">Recent Activity</h3>
+                                <div className="space-y-2">
+                                    {myActivities.slice(0,5).map(a => (
+                                        <div key={a.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition">
+                                            <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/20 flex flex-col items-center justify-center text-blue-400 shrink-0">
+                                                <span className="text-[9px] font-bold">{new Date(a.date).toLocaleDateString('en',{month:'short'})}</span>
+                                                <span className="text-base font-black leading-none">{new Date(a.date).getDate()}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold truncate">{a.description}</p>
+                                                <p className="text-[11px] text-gray-400">{a.timeIn} → {a.timeOut}</p>
+                                            </div>
+                                            <div className="text-blue-400 font-black text-sm shrink-0">{a.totalHours}h</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {view === 'mylog' && (
+                    <div className="anim-fade space-y-5">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-2xl font-black text-grad">My Activity Log</h2>
+                            {myActivities.length > 0 && (
+                                <button onClick={() => exportToCSV(myActivities, user)}
+                                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-sm font-bold hover:bg-white/10 transition flex items-center gap-2">
+                                    <i className="fa-solid fa-download text-blue-400"></i> Export CSV
+                                </button>
+                            )}
+                        </div>
+                        <div className="glass rounded-3xl overflow-hidden">
+                            {myActivities.length === 0 ? (
+                                <div className="p-16 text-center opacity-40">
+                                    <i className="fa-solid fa-folder-open text-5xl mb-4 block"></i>
+                                    <p className="font-bold text-sm uppercase tracking-widest">No activities logged yet.</p>
+                                </div>
+                            ) : (
+                                <table className="w-full nexus-table">
+                                    <thead className="bg-black/20">
+                                        <tr>
+                                            <th>Date</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Description</th><th>Source</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {myActivities.map(a => (
+                                            <tr key={a.id}>
+                                                <td className="font-bold text-sm whitespace-nowrap">{fmtDate(a.date)}</td>
+                                                <td className="font-mono text-sm">{a.timeIn}</td>
+                                                <td className="font-mono text-sm">{a.timeOut}</td>
+                                                <td className="font-black text-blue-400">{a.totalHours}h</td>
+                                                <td className="text-sm opacity-80 max-w-xs truncate">{a.description}</td>
+                                                <td><span className="text-[10px] font-bold px-2 py-1 rounded-md bg-white/5 border border-white/10">{a.source||'Manual'}</span></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+};
+
+// ============================================================================
+// ADMIN OS — MAIN ADMIN INTERFACE
+// ============================================================================
+const AdminOS = ({ user, onLogout, theme, setTheme }) => {
+    const [view, setView] = useState('tracker');
+    const [toast, setToast] = useState(null);
+    const [employees, setEmployees] = useState(EMPLOYEES_INIT);
+    const [activities, setActivities] = useState(ACTS_INIT);
+    const [gasConnected, setGasConnected] = useState(api._gasOk);
+
+    // Tracker state
+    const [selDept, setSelDept] = useState('ALL');
+    const [selEmp, setSelEmp] = useState(null);
+    const [empSearch, setEmpSearch] = useState('');
+    const [sortOrder, setSortOrder] = useState('desc');
+    const [selMonth, setSelMonth] = useState('All');
+
+    // Directory state
+    const [dirSearch, setDirSearch] = useState('');
+    const [dirDept, setDirDept] = useState('ALL');
+    const [dirStatus, setDirStatus] = useState('ALL');
+
+    // Modal
+    const [modal, setModal] = useState(null); // null | 'add' | 'edit' | 'logActivity'
+    const [editEmp, setEditEmp] = useState(null);
+    const [empForm, setEmpForm] = useState({});
+    const [logForm, setLogForm] = useState({ date: new Date().toISOString().split('T')[0], timeIn:'08:00', timeOut:'17:00', description:'' });
+    const [logTarget, setLogTarget] = useState(null);
+
+    useEffect(() => { document.documentElement.setAttribute('data-theme', theme); }, [theme]);
+
+    const showToast = useCallback((message, type='info') => setToast({ message, type }), []);
+
+    // ── TRACKER LOGIC ──
+    const deptEmps = useMemo(() => {
+        let list = selDept === 'ALL' ? employees : employees.filter(e => e.deptId === selDept.id);
+        if (empSearch.trim()) {
+            const q = empSearch.toLowerCase();
+            list = list.filter(e => e.fullName.toLowerCase().includes(q) || e.employeeId.toLowerCase().includes(q));
+        }
+        return list;
+    }, [selDept, employees, empSearch]);
+
+    const empActs = useMemo(() => activities.filter(a => a.empId === selEmp?.id), [activities, selEmp]);
+
+    const availMonths = useMemo(() => {
+        const set = new Set(empActs.map(a => new Date(a.date).toLocaleString('default',{month:'long',year:'numeric'})));
+        return [...set];
+    }, [empActs]);
+
+    const filteredActs = useMemo(() => {
+        let list = empActs;
+        if (selMonth !== 'All') list = list.filter(a => new Date(a.date).toLocaleString('default',{month:'long',year:'numeric'}) === selMonth);
+        return [...list].sort((a,b) => sortOrder === 'desc' ? new Date(b.date)-new Date(a.date) : new Date(a.date)-new Date(b.date));
+    }, [empActs, selMonth, sortOrder]);
+
+    const empTotalHours = useMemo(() => empActs.reduce((s,a) => s+(a.totalHours||0),0), [empActs]);
+
+    // ── DIRECTORY LOGIC ──
+    const filteredDir = useMemo(() => {
+        let list = employees;
+        if (dirDept !== 'ALL') list = list.filter(e => e.deptId === parseInt(dirDept));
+        if (dirStatus !== 'ALL') list = list.filter(e => e.status === dirStatus);
+        if (dirSearch.trim()) {
+            const q = dirSearch.toLowerCase();
+            list = list.filter(e => e.fullName.toLowerCase().includes(q) || e.email.toLowerCase().includes(q) || e.employeeId.toLowerCase().includes(q) || e.role.toLowerCase().includes(q));
+        }
+        return list;
+    }, [employees, dirDept, dirStatus, dirSearch]);
+
+    // ── CRUD ──
+    const openAdd = () => {
+        setEditEmp(null);
+        setEmpForm({ firstName:'', lastName:'', email:'', deptId:1, role:'Staff', employeeId:`GHZ-${Math.floor(Math.random()*9000)+1000}`, status:'Active', password:'ghz2025' });
+        setModal('add');
+    };
+    const openEdit = (emp) => { setEditEmp(emp); setEmpForm({...emp}); setModal('edit'); };
+    const saveEmp = async (e) => {
+        e.preventDefault();
+        if (editEmp) {
+            const updated = { ...editEmp, ...empForm, fullName: `${empForm.firstName} ${empForm.lastName}` };
+            setEmployees(prev => prev.map(x => x.id === editEmp.id ? updated : x));
+            if (selEmp?.id === editEmp.id) setSelEmp(updated);
+            showToast('Employee record updated.', 'success');
+            await api.call('updateEmployee', updated);
+        } else {
+            const newEmp = { ...empForm, id: Date.now(), fullName:`${empForm.firstName} ${empForm.lastName}`, loginCount:0, totalHours:0 };
+            setEmployees(prev => [newEmp, ...prev]);
+            showToast('New employee added to Nexus.', 'success');
+            await api.call('updateEmployee', newEmp);
+        }
+        setModal(null);
+    };
+    const deleteEmp = async (id) => {
+        if (!confirm('Remove this employee permanently from the Nexus database?')) return;
+        setEmployees(prev => prev.filter(e => e.id !== id));
+        setActivities(prev => prev.filter(a => a.empId !== id));
+        if (selEmp?.id === id) setSelEmp(null);
+        showToast('Record removed.', 'warn');
+        await api.call('deleteEmployee', { id });
+    };
+
+    const openLogActivity = (emp) => {
+        setLogTarget(emp);
+        setLogForm({ date: new Date().toISOString().split('T')[0], timeIn:'08:00', timeOut:'17:00', description:'' });
+        setModal('logActivity');
+    };
+    const saveLog = async (e) => {
+        e.preventDefault();
+        const [ih, im] = logForm.timeIn.split(':').map(Number);
+        const [oh, om] = logForm.timeOut.split(':').map(Number);
+        const hrs = parseFloat(((oh*60+om - ih*60-im)/60).toFixed(2));
+        const newAct = {
+            id: Date.now(),
+            empId: logTarget.id,
+            date: new Date(logForm.date).toISOString(),
+            timeIn: new Date(`2000-01-01T${logForm.timeIn}`).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            timeOut: new Date(`2000-01-01T${logForm.timeOut}`).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+            totalHours: Math.max(0, hrs),
+            description: logForm.description || 'Activity logged by admin.',
+            status: 'Logged',
+            source: 'Admin Entry'
+        };
+        setActivities(prev => [newAct, ...prev]);
+        showToast(`Activity logged for ${logTarget.firstName}.`, 'success');
+        setModal(null);
+        await api.call('logActivity', newAct);
+    };
+
+    // ── DASHBOARD STATS ──
+    const stats = useMemo(() => ({
+        total: employees.length,
+        active: employees.filter(e => e.status === 'Active').length,
+        idle: employees.filter(e => e.status === 'Idle').length,
+        absent: employees.filter(e => e.status === 'Absent').length,
+        totalHrs: activities.reduce((s,a) => s+(a.totalHours||0),0),
+        todayLogs: activities.filter(a => new Date(a.date).toDateString() === new Date().toDateString()).length
+    }), [employees, activities]);
+
+    const syncGAS = async () => {
+        showToast('Testing GAS connection...', 'info');
+        const online = await api.ping();
+        if (online) {
+            setGasConnected(true);
+            showToast('✅ GAS backend is online! Live sync active.', 'success');
+        } else {
+            setGasConnected(false);
+            showToast('⚠️ GAS backend offline. Running on local data — all writes queued locally.', 'warn');
+        }
+    };
+
+    // ── NAV TABS ──
+    const tabs = [
+        { id:'dashboard', icon:'fa-chart-pie', label:'Overview' },
+        { id:'tracker', icon:'fa-satellite-dish', label:'Live Tracker' },
+        { id:'employees', icon:'fa-address-book', label:'Directory' },
+        { id:'settings', icon:'fa-sliders', label:'Settings' }
+    ];
+
+    return (
+        <div className="min-h-screen flex flex-col pb-28 transition-colors duration-500">
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)}/>}
+            <LiveClock/>
+
+            {/* ── MODALS ── */}
+            {(modal === 'add' || modal === 'edit') && (
+                <div className="modal-overlay">
+                    <div className="glass p-8 rounded-3xl w-full max-w-lg border border-white/20 shadow-[0_32px_80px_rgba(0,0,0,0.7)] relative anim-fade">
+                        <button onClick={() => setModal(null)} className="absolute top-6 right-6 opacity-40 hover:opacity-100 transition text-xl"><i className="fa-solid fa-xmark"></i></button>
+                        <h2 className="text-xl font-black mb-6 text-grad">{modal === 'edit' ? '✏️ Edit Employee Record' : '➕ Register New Employee'}</h2>
+                        <form onSubmit={saveEmp} className="space-y-4">
+                            <div className="flex gap-3">
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">First Name</label>
+                                    <input required type="text" value={empForm.firstName||''} onChange={e=>setEmpForm({...empForm,firstName:e.target.value})} className="input-field"/>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Last Name</label>
+                                    <input required type="text" value={empForm.lastName||''} onChange={e=>setEmpForm({...empForm,lastName:e.target.value})} className="input-field"/>
+                                </div>
+                            </div>
+                            <div className="flex gap-3">
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Employee ID</label>
+                                    <input required type="text" value={empForm.employeeId||''} onChange={e=>setEmpForm({...empForm,employeeId:e.target.value})} className="input-field font-mono"/>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Department</label>
+                                    <select value={empForm.deptId||1} onChange={e=>setEmpForm({...empForm,deptId:parseInt(e.target.value)})} className="input-field [&>option]:text-black">
+                                        {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.icon} {d.name}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Email</label>
+                                <input required type="email" value={empForm.email||''} onChange={e=>setEmpForm({...empForm,email:e.target.value})} className="input-field"/>
+                            </div>
+                            <div className="flex gap-3">
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Role</label>
+                                    <input required type="text" value={empForm.role||''} onChange={e=>setEmpForm({...empForm,role:e.target.value})} className="input-field"/>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Status</label>
+                                    <select value={empForm.status||'Active'} onChange={e=>setEmpForm({...empForm,status:e.target.value})} className="input-field [&>option]:text-black">
+                                        <option>Active</option><option>Idle</option><option>Absent</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Login Password</label>
+                                <input type="text" value={empForm.password||''} onChange={e=>setEmpForm({...empForm,password:e.target.value})} className="input-field font-mono" placeholder="ghz2025"/>
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                                <button type="button" onClick={() => setModal(null)} className="px-5 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 border border-white/15 transition">Cancel</button>
+                                <button type="submit" className="px-5 py-2.5 rounded-xl font-bold btn-primary"><i className="fa-solid fa-floppy-disk mr-2"></i>Save</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {modal === 'logActivity' && logTarget && (
+                <div className="modal-overlay">
+                    <div className="glass p-8 rounded-3xl w-full max-w-md border border-white/20 shadow-[0_32px_80px_rgba(0,0,0,0.7)] relative anim-fade">
+                        <button onClick={() => setModal(null)} className="absolute top-6 right-6 opacity-40 hover:opacity-100 transition text-xl"><i className="fa-solid fa-xmark"></i></button>
+                        <div className="flex items-center gap-4 mb-6">
+                            <Avatar emp={logTarget} size="lg"/>
+                            <div>
+                                <h2 className="text-xl font-black text-grad">Log Activity</h2>
+                                <p className="text-sm text-gray-400">{logTarget.firstName} {logTarget.lastName}</p>
+                            </div>
+                        </div>
+                        <form onSubmit={saveLog} className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Date</label>
+                                <input required type="date" value={logForm.date} onChange={e=>setLogForm({...logForm,date:e.target.value})} className="input-field"/>
+                            </div>
+                            <div className="flex gap-3">
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Time In</label>
+                                    <input required type="time" value={logForm.timeIn} onChange={e=>setLogForm({...logForm,timeIn:e.target.value})} className="input-field"/>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Time Out</label>
+                                    <input required type="time" value={logForm.timeOut} onChange={e=>setLogForm({...logForm,timeOut:e.target.value})} className="input-field"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-widest mb-1 opacity-70">Task Description</label>
+                                <textarea required value={logForm.description} onChange={e=>setLogForm({...logForm,description:e.target.value})}
+                                    className="input-field h-24 resize-none" placeholder="Describe the tasks performed..."/>
+                            </div>
+                            <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                                <button type="button" onClick={() => setModal(null)} className="px-5 py-2.5 rounded-xl font-bold bg-white/5 hover:bg-white/10 border border-white/15 transition">Cancel</button>
+                                <button type="submit" className="px-5 py-2.5 rounded-xl font-bold btn-primary"><i className="fa-solid fa-clock mr-2"></i>Log Hours</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ── HEADER ── */}
+            <header className="glass-header text-[var(--tx)] py-3 px-7 flex justify-between items-center z-20 sticky top-0">
+                <div className="flex items-center gap-6">
+                    <div className="w-11 h-11 rounded-xl border border-white/20 overflow-hidden bg-white p-1 shadow-inner hover:scale-105 transition">
+                        <img src="https://contents.smsupermalls.com/data/uploads/2020/07/GIGAHERTZ_COMPUTER_SYSTEM.jpg" alt="Logo" className="w-full h-full object-contain rounded-lg"/>
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-black tracking-tight text-grad">Gigahertz Nexus Admin</h1>
+                        <div className="flex gap-1 mt-1.5">
+                            {tabs.map(t => (
+                                <button key={t.id} onClick={() => setView(t.id)}
+                                    className={`text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-full transition-all ${view === t.id ? 'bg-blue-600 text-white shadow-md' : 'text-[var(--tx2)] hover:text-[var(--tx)] hover:bg-white/10'}`}>
+                                    <i className={`fa-solid ${t.icon} mr-1`}></i>{t.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 text-xs bg-white/5 px-3 py-1.5 rounded-full font-bold border border-white/10">
+                        <span className={`w-2 h-2 rounded-full ${gasConnected ? 'bg-green-500' : gasConnected === false ? 'bg-red-500' : 'bg-yellow-500'} animate-pulse`}></span>
+                        {gasConnected ? 'GAS Online' : gasConnected === false ? 'Local Mode' : 'Checking...'}
+                    </div>
+                    <div className="text-xs bg-white/5 px-3 py-1.5 rounded-full font-bold border border-white/10 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_6px_#22c55e]"></span>
+                        {user.firstName} (Root)
+                    </div>
+                    <button onClick={onLogout} title="Disconnect" className="w-9 h-9 rounded-full flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition border border-red-500/20">
+                        <i className="fa-solid fa-power-off text-sm"></i>
+                    </button>
+                </div>
+            </header>
+
+            {/* ════════════════════════════════
+                VIEW: DASHBOARD
+            ════════════════════════════════ */}
+            {view === 'dashboard' && (
+                <div className="p-7 max-w-[1440px] mx-auto w-full anim-fade space-y-7 mt-3">
+                    <div>
+                        <h2 className="text-4xl font-black tracking-tight text-grad">Nexus Analytics</h2>
+                        <p className="text-[var(--tx2)] font-semibold mt-1">Real-time telemetry across {DEPARTMENTS.length} department units.</p>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <StatCard title="Total Staff" value={stats.total} icon={<i className="fa-solid fa-users"/>} trend={8} color="blue"/>
+                        <StatCard title="Active" value={stats.active} icon={<i className="fa-solid fa-signal"/>} trend={3} color="green"/>
+                        <StatCard title="Idle" value={stats.idle} icon={<i className="fa-solid fa-mug-hot"/>} color="yellow"/>
+                        <StatCard title="Absent" value={stats.absent} icon={<i className="fa-solid fa-triangle-exclamation"/>} alert={stats.absent>5} color="red"/>
+                        <StatCard title="Total Hours" value={stats.totalHrs.toFixed(0)} icon={<i className="fa-solid fa-clock"/>} color="blue"/>
+                        <StatCard title="Today's Logs" value={stats.todayLogs} icon={<i className="fa-solid fa-bolt"/>} color="green"/>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Department breakdown */}
+                        <div className="glass p-7 rounded-3xl flex flex-col h-[420px]">
+                            <h3 className="text-xl font-black text-grad mb-1">Workforce Distribution</h3>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--tx3)] mb-5">Staff per department</p>
+                            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+                                {DEPARTMENTS.map(d => {
+                                    const cnt = employees.filter(e => e.deptId === d.id).length;
+                                    const pct = Math.max(3, (cnt/employees.length)*100);
+                                    return (
+                                        <div key={d.id} className="flex items-center gap-3 group">
+                                            <span className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-base shadow-inner group-hover:bg-blue-500/15 transition">{d.icon}</span>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between text-[11px] font-bold mb-1.5 uppercase tracking-wide">
+                                                    <span>{d.name}</span>
+                                                    <span className="text-blue-400">{cnt}</span>
+                                                </div>
+                                                <div className="progress-bar"><div className="progress-fill" style={{width:`${pct}%`}}></div></div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Live feed */}
+                        <div className="glass p-7 rounded-3xl flex flex-col h-[420px]">
+                            <div className="flex justify-between items-start mb-5">
+                                <div>
+                                    <h3 className="text-xl font-black text-grad">Live Telemetry Feed</h3>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--tx3)] mt-1">Latest activity events</p>
+                                </div>
+                                <i className="fa-solid fa-satellite-dish text-blue-400 animate-pulse"></i>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                                {[...activities].reverse().slice(0,15).map(act => {
+                                    const emp = employees.find(e => e.id === act.empId);
+                                    if (!emp) return null;
+                                    return (
+                                        <div key={act.id} className="flex gap-3 items-center p-3 rounded-xl hover:bg-white/5 transition cursor-default">
+                                            <Avatar emp={emp} size="sm"/>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[13px] font-bold truncate">
+                                                    {emp.firstName} {emp.lastName} <span className="opacity-50 font-medium">→</span> <span className="text-blue-400">{act.totalHours}h</span>
+                                                </p>
+                                                <p className="text-[11px] text-[var(--tx3)] truncate">
+                                                    <i className="fa-regular fa-clock mr-1 opacity-60"></i>{fmtDate(act.date)}
+                                                </p>
+                                            </div>
+                                            <StatusBadge status={act.status}/>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ════════════════════════════════
+                VIEW: LIVE TRACKER
+            ════════════════════════════════ */}
+            {view === 'tracker' && (
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-5 gap-5 max-w-[1680px] mx-auto w-full anim-fade mt-2">
+
+                    {/* COL 1: DEPARTMENTS */}
+                    <div className="w-full lg:w-[220px] glass rounded-3xl flex flex-col overflow-hidden shrink-0 h-[82vh]">
+                        <div className="px-5 py-4 border-b border-white/10 flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center text-xs border border-blue-500/25"><i className="fa-solid fa-building"></i></div>
+                            <span className="font-black text-xs uppercase tracking-widest text-grad">Departments</span>
+                        </div>
+                        <div className="p-3 overflow-y-auto flex-1 space-y-2">
+                            <button onClick={() => { setSelDept('ALL'); setSelEmp(null); setEmpSearch(''); }}
+                                className={`w-full text-left px-4 py-3 rounded-2xl skeuo flex items-center gap-3 ${selDept==='ALL'?'skeuo-active':''}`}>
+                                <span className="text-lg">🌐</span>
+                                <span className="text-[12px] font-bold uppercase">All Depts</span>
+                            </button>
+                            <div className="border-b border-white/5 my-2"/>
+                            {DEPARTMENTS.map(d => (
+                                <button key={d.id} onClick={() => { setSelDept(d); setSelEmp(null); setEmpSearch(''); }}
+                                    className={`w-full text-left px-4 py-3 rounded-2xl skeuo flex items-center gap-3 ${selDept?.id===d.id?'skeuo-active':''}`}>
+                                    <span className="text-lg">{d.icon}</span>
+                                    <span className="text-[11px] font-bold leading-tight">{d.name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* COL 2: EMPLOYEES */}
+                    <div className="w-full lg:w-[300px] glass rounded-3xl flex flex-col overflow-hidden shrink-0 h-[82vh]">
+                        <div className="px-5 py-4 border-b border-white/10 flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs border border-indigo-500/25"><i className="fa-solid fa-users"></i></div>
+                                <span className="font-black text-xs uppercase tracking-widest text-grad">Personnel</span>
+                            </div>
+                            <span className="bg-blue-600 text-white text-[10px] px-2.5 py-1 rounded-full font-bold">{deptEmps.length}</span>
+                        </div>
+                        <div className="p-3">
+                            <div className="relative">
+                                <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tx3)] text-xs"></i>
+                                <input type="text" placeholder="Search employee..." value={empSearch} onChange={e => setEmpSearch(e.target.value)} className="search-box"/>
+                            </div>
+                        </div>
+                        <div className="px-3 pb-3 overflow-y-auto flex-1 space-y-2">
+                            {deptEmps.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-32 opacity-40">
+                                    <i className="fa-solid fa-ghost text-3xl mb-2"></i>
+                                    <p className="text-xs font-bold uppercase tracking-widest">No results</p>
+                                </div>
+                            ) : deptEmps.map(emp => {
+                                const dept = DEPARTMENTS.find(d => d.id === emp.deptId);
+                                return (
+                                    <button key={emp.id} onClick={() => { setSelEmp(emp); setSelMonth('All'); }}
+                                        className={`w-full text-left px-4 py-3.5 rounded-2xl skeuo flex items-center justify-between gap-3 ${selEmp?.id===emp.id?'skeuo-active':''}`}>
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black shrink-0 border border-white/20 transition ${selEmp?.id===emp.id?'bg-white text-blue-600':'bg-white/10'}`}>
+                                                {emp.firstName[0]}
+                                            </div>
+                                            <div className="overflow-hidden">
+                                                <div className="font-bold text-[13px] truncate">{emp.firstName} {emp.lastName}</div>
+                                                <div className="text-[10px] font-semibold opacity-55 truncate">{selDept==='ALL'&&dept?.icon} {emp.employeeId}</div>
+                                            </div>
+                                        </div>
+                                        <StatusBadge status={emp.status}/>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* COL 3: TELEMETRY LOG */}
+                    <div className="flex-1 glass rounded-3xl flex flex-col overflow-hidden h-[82vh] border border-white/20">
+                        <div className="px-6 py-4 border-b border-white/10 flex flex-wrap justify-between items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <div className="w-7 h-7 rounded-lg bg-green-500/20 text-green-400 flex items-center justify-center text-xs border border-green-500/25"><i className="fa-solid fa-chart-line"></i></div>
+                                <span className="font-black text-xs uppercase tracking-widest text-grad">Telemetry Log</span>
+                            </div>
+                            {selEmp && (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <button onClick={() => openLogActivity(selEmp)} className="btn-primary px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5">
+                                        <i className="fa-solid fa-plus"></i> Log Hours
+                                    </button>
+                                    <select value={sortOrder} onChange={e => setSortOrder(e.target.value)} className="bg-white/5 border border-white/10 text-[11px] font-bold rounded-lg px-3 py-1.5 outline-none [&>option]:text-black">
+                                        <option value="desc">Newest First</option>
+                                        <option value="asc">Oldest First</option>
+                                    </select>
+                                    <select value={selMonth} onChange={e => setSelMonth(e.target.value)} className="bg-white/5 border border-white/10 text-[11px] font-bold rounded-lg px-3 py-1.5 outline-none [&>option]:text-black">
+                                        <option value="All">All Months</option>
+                                        {availMonths.map(m => <option key={m} value={m}>{m}</option>)}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+
+                        {!selEmp ? (
+                            <div className="flex-1 flex flex-col items-center justify-center opacity-30">
+                                <div className="w-20 h-20 rounded-full border-4 border-dashed border-[var(--tx)] flex items-center justify-center" style={{animation:'spin 12s linear infinite'}}>
+                                    <i className="fa-solid fa-satellite text-3xl"></i>
+                                </div>
+                                <h3 className="text-lg font-black uppercase tracking-widest mt-5 mb-2">Awaiting Target</h3>
+                                <p className="text-sm font-bold">Select a personnel node to view telemetry.</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-auto flex-1">
+                                {/* Employee Header */}
+                                <div className="px-7 py-5 border-b border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between sticky top-0 z-10 backdrop-blur-xl bg-[var(--glass-bg)] gap-4">
+                                    <div className="flex items-center gap-5">
+                                        <Avatar emp={selEmp} size="xl"/>
+                                        <div>
+                                            <h3 className="text-2xl font-black tracking-tight">{selEmp.firstName} {selEmp.lastName}</h3>
+                                            <p className="text-[11px] font-bold text-[var(--tx2)] mt-1 flex items-center gap-2">
+                                                <span className="text-blue-400 uppercase tracking-wider">{selEmp.role}</span>
+                                                <span className="opacity-30">•</span>
+                                                <span>{selEmp.employeeId}</span>
+                                                <span className="opacity-30">•</span>
+                                                <i className="fa-solid fa-envelope opacity-40 text-xs"></i>
+                                                <span>{selEmp.email}</span>
+                                            </p>
+                                            <div className="flex items-center gap-4 mt-2">
+                                                <span className="text-[11px] font-bold text-blue-400"><i className="fa-solid fa-clock mr-1"></i>{empTotalHours.toFixed(1)} Total Hours</span>
+                                                <span className="text-[11px] font-bold text-green-400"><i className="fa-solid fa-calendar-check mr-1"></i>{empActs.length} Sessions</span>
+                                                <StatusBadge status={selEmp.status}/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => openEdit(selEmp)} className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                                            <i className="fa-solid fa-pen text-blue-400"></i> Edit
+                                        </button>
+                                        <button onClick={() => exportToCSV(filteredActs, selEmp)} className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                                            <i className="fa-solid fa-download text-green-400"></i> Export CSV
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Activity Table */}
+                                <table className="w-full nexus-table">
+                                    <thead className="bg-black/15 backdrop-blur-md sticky top-[131px]">
+                                        <tr>
+                                            <th>Date</th><th>Duration</th><th>Hours</th><th>Description</th><th>Source</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredActs.length === 0 ? (
+                                            <tr><td colSpan="5" className="text-center py-16 opacity-30">
+                                                <i className="fa-solid fa-folder-open text-4xl mb-3 block"></i>
+                                                <p className="font-bold text-sm uppercase tracking-widest">No records for this period.</p>
+                                            </td></tr>
+                                        ) : filteredActs.map(act => {
+                                            const d = new Date(act.date);
+                                            return (
+                                                <tr key={act.id} className="group cursor-default">
+                                                    <td className="whitespace-nowrap">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex flex-col items-center w-12 h-12 rounded-xl bg-white/5 border border-white/8 group-hover:bg-blue-500/10 group-hover:border-blue-500/25 transition justify-center">
+                                                                <span className="text-[9px] font-bold uppercase text-[var(--tx3)]">{d.toLocaleDateString('en',{month:'short'})}</span>
+                                                                <span className="text-lg font-black leading-tight">{d.getDate()}</span>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-sm font-bold">{d.getFullYear()}</div>
+                                                                <div className="text-[10px] uppercase tracking-wider opacity-40">{d.toLocaleDateString('en',{weekday:'long'})}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="whitespace-nowrap">
+                                                        <span className="font-mono text-sm bg-black/10 px-2.5 py-1 rounded-lg border border-white/5">{act.timeIn} → {act.timeOut}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span className="text-blue-400 font-black text-lg">{act.totalHours}</span>
+                                                        <span className="text-[10px] font-bold ml-1 opacity-50">hrs</span>
+                                                    </td>
+                                                    <td className="max-w-xs">
+                                                        <p className="text-sm opacity-80 leading-relaxed truncate">{act.description}</p>
+                                                        <StatusBadge status={act.status}/>
+                                                    </td>
+                                                    <td>
+                                                        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-white/5 border border-white/8">{act.source||'Manual'}</span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ════════════════════════════════
+                VIEW: DIRECTORY (CRUD)
+            ════════════════════════════════ */}
+            {view === 'employees' && (
+                <div className="p-7 max-w-[1440px] mx-auto w-full anim-fade space-y-5 mt-3">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                        <div>
+                            <h2 className="text-4xl font-black tracking-tight text-grad">Nexus Directory</h2>
+                            <p className="text-[var(--tx2)] font-semibold mt-1">Managing {employees.length} personnel records across {DEPARTMENTS.length} units.</p>
+                        </div>
+                        <button onClick={openAdd} className="btn-primary font-bold py-3 px-6 rounded-2xl flex items-center gap-2 text-sm">
+                            <i className="fa-solid fa-user-plus"></i> Add Employee
+                        </button>
+                    </div>
+
+                    {/* Filters */}
+                    <div className="glass p-4 rounded-2xl flex flex-wrap gap-3 items-center">
+                        <div className="relative flex-1 min-w-[180px]">
+                            <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[var(--tx3)] text-xs"></i>
+                            <input type="text" placeholder="Search name, email, ID, role..." value={dirSearch} onChange={e => setDirSearch(e.target.value)} className="search-box"/>
+                        </div>
+                        <select value={dirDept} onChange={e => setDirDept(e.target.value)} className="bg-white/5 border border-white/10 text-sm font-bold rounded-xl px-3 py-2 outline-none [&>option]:text-black">
+                            <option value="ALL">All Departments</option>
+                            {DEPARTMENTS.map(d => <option key={d.id} value={d.id}>{d.icon} {d.name}</option>)}
+                        </select>
+                        <select value={dirStatus} onChange={e => setDirStatus(e.target.value)} className="bg-white/5 border border-white/10 text-sm font-bold rounded-xl px-3 py-2 outline-none [&>option]:text-black">
+                            <option value="ALL">All Statuses</option>
+                            <option>Active</option><option>Idle</option><option>Absent</option>
+                        </select>
+                        <span className="text-xs font-bold text-[var(--tx3)]">{filteredDir.length} results</span>
+                    </div>
+
+                    {/* Table */}
+                    <div className="glass rounded-3xl overflow-hidden h-[64vh] flex flex-col border border-white/15">
+                        <div className="overflow-auto flex-1">
+                            <table className="w-full nexus-table">
+                                <thead className="bg-black/20 backdrop-blur-xl sticky top-0 z-10">
+                                    <tr>
+                                        <th>Employee</th><th>Role / ID</th><th>Department</th><th>Hours</th><th>Status</th><th className="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredDir.length === 0 ? (
+                                        <tr><td colSpan="6" className="text-center py-16 opacity-30">
+                                            <i className="fa-solid fa-ghost text-4xl mb-3 block"></i>
+                                            <p className="font-bold text-sm uppercase tracking-widest">No employees found.</p>
+                                        </td></tr>
+                                    ) : filteredDir.map(emp => {
+                                        const dept = DEPARTMENTS.find(d => d.id === emp.deptId);
+                                        const hrs = activities.filter(a => a.empId === emp.id).reduce((s,a) => s+(a.totalHours||0),0);
+                                        return (
+                                            <tr key={emp.id} className="group">
+                                                <td>
+                                                    <div className="flex items-center gap-3">
+                                                        <Avatar emp={emp} size="md"/>
+                                                        <div>
+                                                            <div className="font-bold text-sm">{emp.firstName} {emp.lastName}</div>
+                                                            <div className="text-[11px] text-[var(--tx3)]"><i className="fa-regular fa-envelope mr-1 opacity-50"></i>{emp.email}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="font-bold text-sm">{emp.role}</div>
+                                                    <div className="text-[10px] font-mono bg-white/5 border border-white/8 px-2 py-0.5 rounded inline-block mt-1"><i className="fa-solid fa-fingerprint text-blue-400 mr-1 text-[9px]"></i>{emp.employeeId}</div>
+                                                </td>
+                                                <td>
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 text-[11px] font-bold border border-white/8">
+                                                        {dept?.icon} {dept?.name}
+                                                    </span>
+                                                </td>
+                                                <td><span className="font-black text-blue-400">{hrs.toFixed(1)}</span><span className="text-[10px] opacity-50 ml-1">hrs</span></td>
+                                                <td><StatusBadge status={emp.status}/></td>
+                                                <td className="text-right">
+                                                    <button onClick={() => { setView('tracker'); setSelEmp(emp); setSelDept('ALL'); }} title="View in Tracker" className="w-8 h-8 bg-purple-500/10 hover:bg-purple-500 text-purple-400 hover:text-white rounded-lg mr-1.5 transition border border-purple-500/20 text-sm"><i className="fa-solid fa-eye"></i></button>
+                                                    <button onClick={() => openLogActivity(emp)} title="Log Activity" className="w-8 h-8 bg-green-500/10 hover:bg-green-500 text-green-400 hover:text-white rounded-lg mr-1.5 transition border border-green-500/20 text-sm"><i className="fa-solid fa-clock"></i></button>
+                                                    <button onClick={() => openEdit(emp)} title="Edit" className="w-8 h-8 bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white rounded-lg mr-1.5 transition border border-blue-500/20 text-sm"><i className="fa-solid fa-pen"></i></button>
+                                                    <button onClick={() => deleteEmp(emp.id)} title="Delete" className="w-8 h-8 bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white rounded-lg transition border border-red-500/20 text-sm"><i className="fa-solid fa-trash-can"></i></button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ════════════════════════════════
+                VIEW: SETTINGS
+            ════════════════════════════════ */}
+            {view === 'settings' && (
+                <div className="p-7 max-w-[760px] mx-auto w-full anim-fade space-y-5 mt-3">
+                    <div>
+                        <h2 className="text-4xl font-black tracking-tight text-grad">Nexus Configuration</h2>
+                        <p className="text-[var(--tx2)] font-semibold mt-1">System environment & connection management.</p>
+                    </div>
+
+                    <div className="glass p-8 rounded-3xl space-y-8 border border-white/15">
+
+                        {/* Admin Accounts */}
+                        <div className="flex flex-col gap-4 pb-7 border-b border-white/8">
+                            <div>
+                                <h3 className="text-lg font-black flex items-center gap-2"><i className="fa-solid fa-shield-halved text-blue-400"></i> Admin Accounts</h3>
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--tx3)] mt-1">Hardcoded admin credentials — always available offline.</p>
+                            </div>
+                            <div className="space-y-2">
+                                {[
+                                    { name: 'Nexus Admin', email: 'admin@gigahertz.com', pw: 'admin123', id: 'GHZ-0001', dept: '🖥️ IT / NEXUS CORE' },
+                                    { name: 'James Beltran', email: 'beltran.james@gmail.com', pw: 'jamespogi123', id: 'GHZ-0002', dept: '📈 PROCESS IMP.' }
+                                ].map(acc => (
+                                    <div key={acc.email} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/8 gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center font-black text-white text-sm border border-white/20">
+                                                {acc.name[0]}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-sm">{acc.name}</p>
+                                                <p className="text-[10px] text-[var(--tx3)]">{acc.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-[10px] font-mono bg-white/5 border border-white/8 px-2 py-0.5 rounded text-blue-400">{acc.id}</p>
+                                            <p className="text-[10px] text-[var(--tx3)] mt-1">{acc.dept}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Theme */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-7 border-b border-white/8">
+                            <div>
+                                <h3 className="text-lg font-black flex items-center gap-2"><i className="fa-solid fa-palette text-blue-400"></i> Interface Theme</h3>
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--tx3)] mt-1">Modify the visual operating environment.</p>
+                            </div>
+                            <div className="flex gap-2 bg-black/20 p-1.5 rounded-2xl border border-white/5">
+                                {['light','dark','red'].map(t => (
+                                    <button key={t} onClick={() => setTheme(t)} className={`px-5 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition ${theme===t?(t==='red'?'bg-red-600':'bg-blue-600')+' text-white shadow-md':'hover:bg-white/10'}`}>
+                                        {t}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* GAS Sync */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-7 border-b border-white/8">
+                            <div>
+                                <h3 className="text-lg font-black flex items-center gap-2"><i className="fa-brands fa-google text-green-400"></i> GAS Backend Sync</h3>
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-[var(--tx3)] mt-1">Sync data with Google App Script backend.</p>
+                                <p className="text-[11px] mt-1 text-blue-400 font-semibold break-all opacity-70">{GAS_URL.slice(0,60)}...</p>
+                            </div>
+                            <button onClick={syncGAS} className="px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl font-bold border border-white/10 transition flex items-center gap-2 text-sm shrink-0">
+                                <i className="fa-solid fa-rotate text-blue-400"></i> Test & Sync
+                            </button>
+                        </div>
+
+                        {/* Connection Status */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-7 border-b border-white/8">
+                            <div>
+                                <h3 className="text-lg font-black flex items-center gap-2"><i className="fa-solid fa-tower-broadcast text-purple-400"></i> Connection Status</h3>
+                                <div className="flex items-center gap-3 mt-2">
+                                    <span className={`flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-lg border ${gasConnected?'bg-green-500/10 text-green-400 border-green-500/20':gasConnected===false?'bg-red-500/10 text-red-400 border-red-500/20':'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'}`}>
+                                        <span className={`w-2 h-2 rounded-full ${gasConnected?'bg-green-400':gasConnected===false?'bg-red-400':'bg-yellow-400'} animate-pulse`}></span>
+                                        {gasConnected?'GAS Online — Live Sync Active':gasConnected===false?'GAS Offline — Local Data Mode':'Checking connection...'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Data Stats */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-7 border-b border-white/8">
+                            <div>
+                                <h3 className="text-lg font-black flex items-center gap-2"><i className="fa-solid fa-database text-yellow-400"></i> Local Dataset</h3>
+                                <div className="flex gap-4 mt-2 flex-wrap">
+                                    <span className="text-sm font-bold text-blue-400">{employees.length} Employees</span>
+                                    <span className="text-sm font-bold text-green-400">{activities.length} Activity Logs</span>
+                                    <span className="text-sm font-bold text-purple-400">{activities.reduce((s,a)=>s+(a.totalHours||0),0).toFixed(0)} Total Hours</span>
+                                </div>
+                            </div>
+                            <button onClick={() => { if(confirm('Export all activity data as CSV?')) { exportToCSV(activities, {firstName:'All',lastName:'Employees'}); showToast('Full export complete!','success'); } }}
+                                className="px-5 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl font-bold border border-white/10 transition flex items-center gap-2 text-sm shrink-0">
+                                <i className="fa-solid fa-file-csv text-green-400"></i> Export All CSV
+                            </button>
+                        </div>
+
+                        {/* Danger */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div>
+                                <h3 className="text-lg font-black text-red-400 flex items-center gap-2"><i className="fa-solid fa-skull"></i> Destructive Actions</h3>
+                                <p className="text-[11px] font-bold uppercase tracking-widest text-red-400/60 mt-1">Reset all local state. Irreversible.</p>
+                            </div>
+                            <button onClick={() => { if(confirm('Hard reset all local data?')) { setEmployees(EMPLOYEES_INIT); setActivities(ACTS_INIT); showToast('System reset complete.','warn'); } }}
+                                className="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl font-bold border border-red-500/25 transition flex items-center gap-2 text-sm shrink-0">
+                                <i className="fa-solid fa-triangle-exclamation"></i> Hard Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Build Info */}
+                    <div className="glass p-5 rounded-2xl border border-white/10 text-center">
+                        <p className="text-[11px] font-bold text-[var(--tx3)] uppercase tracking-widest">
+                            Gigahertz Nexus Activity Tracker • Build v3.0 • {new Date().getFullYear()}
+                        </p>
+                        <p className="text-[10px] text-[var(--tx3)] mt-1 opacity-60">Developed for internal Gigahertz operations. Authorized personnel only.</p>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ============================================================================
+// ROOT APP
+// ============================================================================
+const App = () => {
+    const [user, setUser] = useState(null);
+    const [theme, setTheme] = useState('dark');
+    const [activities, setActivities] = useState(ACTS_INIT);
+
+    const changeTheme = (t) => {
+        setTheme(t);
+        document.documentElement.setAttribute('data-theme', t);
+    };
+
+    if (!user) return <AuthPortal onLogin={setUser} theme={theme} toggleTheme={changeTheme}/>;
+
+    if (user.role === 'ADMIN' || user.role === 'Super Admin') {
+        return <AdminOS user={user} onLogout={() => setUser(null)} theme={theme} setTheme={changeTheme}/>;
+    }
+
+    return <EmployeeTracker user={user} onLogout={() => setUser(null)} allActivities={activities} setAllActivities={setActivities}/>;
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>
